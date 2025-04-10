@@ -17,7 +17,10 @@ class App(customtkinter.CTk):
         self.rowconfigure(1, weight=0)
         self.columnconfigure(0, weight=1)
 
+        self.user_data = None
+
         self.face_detection = False
+        self.sign_up = False 
 
         self._create_img_frame()
         self._create_btn_frame()
@@ -76,6 +79,11 @@ class App(customtkinter.CTk):
                     for (x,y,w,h) in self.faces:
                         frame = cv2.rectangle(frame, (x,y), (x+w,y+h), (0, 255,0), 2)
                 
+                if self.sign_up:
+                    self.controller.handle_face_detection(frame)
+                    for (x,y,w,h) in self.faces:
+                        frame = cv2.rectangle(frame, (x,y), (x+w,y+h), (255, 0,0), 2)
+                        self.controller.handle_sign_up(frame, self.faces)
 
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 frame = Image.fromarray(frame)
@@ -116,7 +124,8 @@ class App(customtkinter.CTk):
     def open_sign_up_dialog(self):
         sign_up_dialog = SignUpDialog(self)
         self.wait_window(sign_up_dialog)
-        
+        print("Fim do diálogo")
+        self.user_data = sign_up_dialog.user_data
 
 class SignUpDialog(customtkinter.CTkToplevel):
     def __init__(self, master=None):
@@ -153,7 +162,7 @@ class SignUpDialog(customtkinter.CTkToplevel):
         
         
         def close_dialog():
-            self.withdraw()
+            self.destroy()
             print("Operação de Cadastro Cancelada!")
         
         btnCancel = customtkinter.CTkButton(self, 
@@ -166,6 +175,7 @@ class SignUpDialog(customtkinter.CTkToplevel):
 
         def set_user_data():
             self.user_data = {
+                    "id": 0,
                     "name":entry1.get(), 
                     "email":entry2.get(), 
                     "valid":datetime.strptime(entry3.get(), "%d/%m/%Y").date()
@@ -173,7 +183,7 @@ class SignUpDialog(customtkinter.CTkToplevel):
             
             print(self.user_data)
 
-            self.withdraw()
+            self.destroy()
 
         btnConfirm = customtkinter.CTkButton(self, text="Confirmar", command=set_user_data)
         btnConfirm.grid(row=last_row, column=1, sticky="ew", padx=10, pady=5)
