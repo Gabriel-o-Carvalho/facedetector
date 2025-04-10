@@ -28,7 +28,17 @@ class FaceDetectionDB:
 
 class FaceDetectorModel:
     def __init__(self):
-        pass
+        self.face_cascade = cv2.CascadeClassifier()
+        self.face_cascade.load("app/models/haarcascade_hand.xml") 
+
+    def face_identifier(self, frame): 
+        frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        frame_gray = cv2.equalizeHist(frame_gray)
+
+        faces = self.face_cascade.detectMultiScale(frame_gray)
+
+        return faces 
+
 
 # TODO: Implement Locker class
 class Locker:
@@ -43,3 +53,15 @@ class Locker:
 
     def block_access(self):
         pass 
+
+
+class Model:
+    def __init__(self):
+        self.db = FaceDetectionDB()
+        self.locker = Locker("/dev/ttyUSB0", 9600)
+        self.face_model = FaceDetectorModel()
+
+    def detect_face(self, frame):
+        return self.face_model.face_identifier(frame) 
+
+
