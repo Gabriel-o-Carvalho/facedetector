@@ -42,6 +42,7 @@ class Controller:
         print("Treinamento concluído!")
         self.view_app.is_training = False
     def handle_face_prediction(self, frame, face):
+        
         return self.model_app.predict(frame, face)
 def main():
     controller = Controller()
