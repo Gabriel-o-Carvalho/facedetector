@@ -42,7 +42,8 @@ class Controller:
         else:
             self.model_app.remove_user_from_db(user_id)
             self.model_app.train_model()
-
+    def handle_access(self, id, enabled):
+        self.model_app.add_access(id, enabled)
 
     def handle_training(self):
         print("Treinando o modelo...")

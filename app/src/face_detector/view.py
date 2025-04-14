@@ -23,6 +23,7 @@ class App(customtkinter.CTk):
         self.face_detection = False
         self.sign_up = False
         self.is_training = False
+        self.access_timeout_done = True
 
         self._create_img_frame()
         self._create_btn_frame()
@@ -85,13 +86,30 @@ class App(customtkinter.CTk):
                 if self.face_detection:
                     self.faces = self.controller.handle_face_detection(frame)
                     for (x,y,w,h) in self.faces: 
-                        id, pred = self.controller.handle_face_prediction(frame, (x,y,w,h))
+                        id, name, pred = self.controller.handle_face_prediction(frame, (x,y,w,h))
                         color = (0,255,0)
-                        text = f"Usuario:{id}"
+                        text = f"Usuario:{name}"
 
-                        if pred > 40:
+                        if pred > 40 and self.access_timeout_done:
                             color = (0,0,255)
                             text = "Desconhecido"
+                            self.controller.handle_access(id, False)
+                            self.access_timeout_done = False
+                            def set_timeout_done():
+                                self.access_timeout_done = True
+                            self.after(5000, set_timeout_done)
+
+                        elif self.access_timeout_done:
+                            self.controller.handle_access(id, True)
+                            self.access_timeout_done = False
+                            def set_timeout_done():
+                                self.access_timeout_done = True
+                            self.after(5000, set_timeout_done)
+
+
+
+
+
 
                         frame = cv2.rectangle(frame, (x,y), (x+w,y+h), color)
                         tag = cv2.rectangle(frame, (x,y+h), (x+w,y+h+20), color, -1)

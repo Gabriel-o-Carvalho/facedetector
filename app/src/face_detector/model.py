@@ -17,11 +17,9 @@ class User:
 
 # TODO: Implement Access class
 class Access:
-    def __init__(self, usuario_id, autorizado, imagem_base64, timestamp=None):
+    def __init__(self, usuario_id, autorizado):
         self.usuario_id = usuario_id  # pode ser None se for não autorizado
         self.autorizado = autorizado
-        self.imagem_base64 = imagem_base64
-        self.timestamp = timestamp
         # timestamp ficou none por essa atibuição fica a cargo do banco de dados definir
 
 # TODO: FaceDetectionDB class
@@ -29,11 +27,11 @@ class Access:
 class FaceDetectionDB:
     def __init__(self):
         self.conexao = mysql.connector.connect(
-            host="127.0.0.1",
+            host="sql10.freesqldatabase.com",
             port=3306,
-            user="root",
-            password="root",
-            database="controle_acesso_dee"
+            user="sql10773180",
+            password="D9mpSTUtFH",
+            database="sql10773180"
         )
         self.cursor = self.conexao.cursor() 
         self.user_list = {}
@@ -71,10 +69,11 @@ class FaceDetectionDB:
     def add_access(self, access):
         query = """
         INSERT INTO log_acesso (usuario_id, autorizado, imagem_base64, timestamp)
-        VALUES (%s, %s, %s, NOW())
+        VALUES (%s, %s, NULL, NOW())
         """
-        self.cursor.execute(query, (access.usuario_id, access.autorizado, access.imagem_base64))
+        self.cursor.execute(query, (access.usuario_id, str(int(access.autorizado))))
         self.conexao.commit()
+        print(f"Acesso adicionado: {access.usuario_id}, {access.autorizado}")
 
     def remove_user(self, user_id):
         self.cursor.execute("DELETE FROM usuarios WHERE id = %s", (user_id,))
@@ -186,6 +185,9 @@ class Model:
         id, pred = self.face_model.predict(frame[y:y+h,x:x+w])
      
         name = self.db.user_list[str(id)]
-        return name, pred
+        return id, name, pred
         
-
+    def add_access(self, id, enabled):
+        if enabled:
+            access = Access(id, enabled) 
+            self.db.add_access(access)
