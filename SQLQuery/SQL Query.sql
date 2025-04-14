@@ -14,7 +14,7 @@ CREATE TABLE usuarios (
 
 -- Tabela de logs de acesso (autorizados ou não)
 CREATE TABLE log_acesso (
-    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, -- max 4294967295
+    id SMALLINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, -- max 4294967295
     usuario_id INT, -- NULL se não autorizado
     autorizado BOOLEAN NOT NULL,
     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
