@@ -23,8 +23,8 @@ class Controller:
                 print("Operação foi cancelada, saindo do controller")
                 self.view_app.sign_up = False
                 return
-    
-            id = self.model_app.add_user_to_db(self.view_app.user_data)
+            user = model.User(**self.view_app.user_data) 
+            id = self.model_app.add_user_to_db(user)
             print(id)
             self.view_app.user_data["id"] = id
             self.view_app.sign_up = True
@@ -35,15 +35,27 @@ class Controller:
                     self.view_app.sign_up = False
                     print("Data set concluído")
                     self.view_app.is_training = True
-                     
+    def handle_remove_user(self):
+        user_id = self.view_app.open_remove_dialog()
+        if user_id is None:
+            print("Operação Cancelada!")
+        else:
+            self.model_app.remove_user_from_db(user_id)
+            self.model_app.train_model()
+
+
     def handle_training(self):
         print("Treinando o modelo...")
         self.model_app.train_model()
         print("Treinamento concluído!")
         self.view_app.is_training = False
-    def handle_face_prediction(self, frame, face):
-        
+
+    def handle_face_prediction(self, frame, face): 
         return self.model_app.predict(frame, face)
+
+
+
+
 def main():
     controller = Controller()
     controller.start()

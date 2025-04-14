@@ -48,7 +48,7 @@ class App(customtkinter.CTk):
         btn2 = customtkinter.CTkButton(self.btn_frame, text="Cadastrar", command=self.controller.handle_sign_up)
         btn2.grid(row=0, column=1, sticky="nsew", padx=10)
 
-        btn3 = customtkinter.CTkButton(self.btn_frame, text="Remover")
+        btn3 = customtkinter.CTkButton(self.btn_frame, text="Remover", command=self.controller.handle_remove_user)
         btn3.grid(row=0, column=2, sticky="nsew", padx=10) 
 
         btn4 = customtkinter.CTkButton(self.btn_frame, text="Acessos")
@@ -89,7 +89,7 @@ class App(customtkinter.CTk):
                         color = (0,255,0)
                         text = f"Usuario:{id}"
 
-                        if pred > 60:
+                        if pred > 40:
                             color = (0,0,255)
                             text = "Desconhecido"
 
@@ -145,7 +145,11 @@ class App(customtkinter.CTk):
         self.wait_window(sign_up_dialog)
         print("Fim do diálogo")
         self.user_data = sign_up_dialog.user_data
-
+    def open_remove_dialog(self):
+        dialog = customtkinter.CTkInputDialog(text="ID do Usuário", title="Remover Usuário")
+        user_id = dialog.get_input()
+        print("Fim da remoção")
+        return user_id 
 class SignUpDialog(customtkinter.CTkToplevel):
     def __init__(self, master=None):
         super().__init__(master=master)
@@ -168,13 +172,13 @@ class SignUpDialog(customtkinter.CTkToplevel):
         label2 = customtkinter.CTkLabel(self, text="CPF:", justify="left", anchor="w")
         label2.grid(row=1, column=0, sticky="ew", padx=10, pady=5)
 
-        entry2 = customtkinter.CTkEntry(self, placeholder_text="email@ufpe.br")
+        entry2 = customtkinter.CTkEntry(self, placeholder_text="12345678901")
         entry2.grid(row=1, column=1, sticky="ew", padx=10, pady=5)
         
         label3 = customtkinter.CTkLabel(self, text="Vencimento do Cadastro:", justify="left", anchor="w")
         label3.grid(row=2, column=0, sticky="ew", padx=10, pady=5)
 
-        entry3 = customtkinter.CTkEntry(self, placeholder_text="DD/MM/YY")
+        entry3 = customtkinter.CTkEntry(self, placeholder_text="DD/MM/YYYY")
         entry3.grid(row=2, column=1, sticky="ew", padx=10, pady=5)
         
         label4 = customtkinter.CTkLabel(self, text="Tipo", justify="left", anchor="w")
@@ -203,7 +207,7 @@ class SignUpDialog(customtkinter.CTkToplevel):
             self.user_data = {
                     "id": 0,
                     "name":entry1.get(), 
-                    "CPU":entry2.get(), 
+                    "cpf":entry2.get(), 
                     "valid":datetime.strptime(entry3.get(), "%d/%m/%Y").date(),
                     "type":combobox1.get()
             }
