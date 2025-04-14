@@ -18,9 +18,11 @@ class App(customtkinter.CTk):
         self.columnconfigure(0, weight=1)
 
         self.user_data = None
+        self.faces = None
 
         self.face_detection = False
-        self.sign_up = False 
+        self.sign_up = False
+        self.is_training = False
 
         self._create_img_frame()
         self._create_btn_frame()
@@ -70,20 +72,37 @@ class App(customtkinter.CTk):
         self.faces = faces
 
     def _update_frame(self):
-        if self.cap.isOpened():
-            ret, frame = self.cap.read()
+        
+        if self.is_training:
+            self.controller.handle_training()
+            self.after(50, self._update_frame) 
+
+
+        elif self.cap.isOpened():
+            ret, frame = self.cap.read()  
             if ret:
 
                 if self.face_detection:
-                    self.controller.handle_face_detection(frame)
-                    for (x,y,w,h) in self.faces:
-                        frame = cv2.rectangle(frame, (x,y), (x+w,y+h), (0, 255,0), 2)
-                
+                    self.faces = self.controller.handle_face_detection(frame)
+                    for (x,y,w,h) in self.faces: 
+                        id, pred = self.controller.handle_face_prediction(frame, (x,y,w,h))
+                        color = (0,255,0)
+                        text = f"Usuario:{id}"
+
+                        if pred > 60:
+                            color = (0,0,255)
+                            text = "Desconhecido"
+
+                        frame = cv2.rectangle(frame, (x,y), (x+w,y+h), color)
+                        tag = cv2.rectangle(frame, (x,y+h), (x+w,y+h+20), color, -1)
+                        cv2.putText(frame, text, (x,y+h+15), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,0,0), 1, cv2.LINE_AA)
+                        #print(f"Usuário:{id}, Pred:{pred}")
+                         
                 if self.sign_up:
-                    self.controller.handle_face_detection(frame)
+                    self.faces = self.controller.handle_face_detection(frame)
                     for (x,y,w,h) in self.faces:
-                        frame = cv2.rectangle(frame, (x,y), (x+w,y+h), (255, 0,0), 2)
                         self.controller.handle_sign_up(frame, self.faces)
+                        frame = cv2.rectangle(frame, (x,y), (x+w,y+h), (255, 0,0), 2)
 
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 frame = Image.fromarray(frame)
@@ -91,7 +110,7 @@ class App(customtkinter.CTk):
                                                   size=(self.label.winfo_width(), self.label.winfo_height()))
                 self.label.configure(image=self.img)
 
-            self.after(50, self._update_frame)
+            self.after(30, self._update_frame) 
         else:
             print("Não foi possível abrir a câmera, tentando reconexão")
             self.after(3000, self._retry)
@@ -146,21 +165,28 @@ class SignUpDialog(customtkinter.CTkToplevel):
         entry1 = customtkinter.CTkEntry(self, placeholder_text="ex. João Gabriel")
         entry1.grid(row=0, column=1, sticky="ew", padx=10, pady=5)
 
-        label2 = customtkinter.CTkLabel(self, text="Email Institucional:", justify="left", anchor="w")
+        label2 = customtkinter.CTkLabel(self, text="CPF:", justify="left", anchor="w")
         label2.grid(row=1, column=0, sticky="ew", padx=10, pady=5)
 
         entry2 = customtkinter.CTkEntry(self, placeholder_text="email@ufpe.br")
         entry2.grid(row=1, column=1, sticky="ew", padx=10, pady=5)
-
+        
         label3 = customtkinter.CTkLabel(self, text="Vencimento do Cadastro:", justify="left", anchor="w")
         label3.grid(row=2, column=0, sticky="ew", padx=10, pady=5)
 
         entry3 = customtkinter.CTkEntry(self, placeholder_text="DD/MM/YY")
         entry3.grid(row=2, column=1, sticky="ew", padx=10, pady=5)
-       
+        
+        label4 = customtkinter.CTkLabel(self, text="Tipo", justify="left", anchor="w")
+        label4.grid(row=3, column=0, sticky="ew", padx=10, pady=5)
+
+        combobox1 = customtkinter.CTkComboBox(self, values=["Aluno", "Professor", "Técnico", "Visitante", "Terceirizado"])
+        combobox1.set("Aluno")
+        combobox1.grid(row=3, column=1, sticky="ew", padx=10, pady=5)
+
+
         (last_column, last_row) = self.grid_size()
-        
-        
+         
         def close_dialog():
             self.destroy()
             print("Operação de Cadastro Cancelada!")
@@ -177,8 +203,9 @@ class SignUpDialog(customtkinter.CTkToplevel):
             self.user_data = {
                     "id": 0,
                     "name":entry1.get(), 
-                    "email":entry2.get(), 
-                    "valid":datetime.strptime(entry3.get(), "%d/%m/%Y").date()
+                    "CPU":entry2.get(), 
+                    "valid":datetime.strptime(entry3.get(), "%d/%m/%Y").date(),
+                    "type":combobox1.get()
             }
             
             print(self.user_data)
