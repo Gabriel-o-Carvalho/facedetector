@@ -7,11 +7,11 @@ import matplotlib.pyplot as plt
 # Conexão com o banco de dados
 def conectar_banco():
     return mysql.connector.connect(
-        host="127.0.0.1",
+        host="sql10.freesqldatabase.com",
         port=3306,
-        user="root",
-        password="root",
-        database="controle_acesso_dee"
+        user="sql10773180",
+        password="D9mpSTUtFH",
+        database="sql10773180"
     )
 
 # Últimos logs
