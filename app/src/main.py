@@ -54,7 +54,11 @@ class Controller:
     def handle_face_prediction(self, frame, face): 
         return self.model_app.predict(frame, face)
 
-
+    def handle_locker_access(self, enabled=False):
+        if enabled:
+            self.model_app.locker.enable_access()
+        else:
+            self.model_app.locker.block_access()
 
 
 def main():

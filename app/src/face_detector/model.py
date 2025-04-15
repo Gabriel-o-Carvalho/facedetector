@@ -1,5 +1,5 @@
 import cv2
-import serial
+import serial as ss
 import os
 import numpy as np
 from PIL import Image
@@ -27,11 +27,11 @@ class Access:
 class FaceDetectionDB:
     def __init__(self):
         self.conexao = mysql.connector.connect(
-            host="sql10.freesqldatabase.com",
+            host="127.0.0.1",
             port=3306,
-            user="sql10773180",
-            password="D9mpSTUtFH",
-            database="sql10773180"
+            user="root",
+            password="root",
+            database="controle_acesso_dee"
         )
         self.cursor = self.conexao.cursor() 
         self.user_list = {}
@@ -121,9 +121,15 @@ class FaceDetectorModel:
         self.classifier.write(f"{data_dir}/classifier.xml")
         
     def predict(self, face):
-
-        return self.classifier.predict(face)
-
+        
+        try:
+            id, pred = self.classifier.predict(face)
+            
+        except cv2.error as e:
+            print("Houve um error:", e)
+            id = 0
+            pred = 1000
+        return id, pred
 # TODO: Implement Locker class
 class Locker:
     def __init__(self, port="COM4", baud_rate=9600):
@@ -132,21 +138,30 @@ class Locker:
         self.arduino = None
 
     def connect(self):
-        self.arduino = serial.Serial(self.port, self.baud_rate, timeout=5)
+        self.arduino = ss.Serial(self.port, self.baud_rate, timeout=5)
     
     def enable_access(self):
         if self.arduino and self.arduino.isOpen():
-            self.arduino.write(b'1')
+            self.arduino.write(b'a')
+        else:
+            self.connect()
+
     
     def block_access(self):
         if self.arduino and self.arduino.isOpen():
-            self.arduino.write(b'0')
+            self.arduino.write(b'b')
             print("Acesso negado: usuário não reconhecido.")
 
+        else:
+            self.connect()
 class Model:
     def __init__(self):
         self.db = FaceDetectionDB()
         self.locker = Locker("/dev/ttyUSB0", 9600)
+        try:
+            self.locker.connect()
+        except Exception as e:
+            print("Houve um erro ao conectar com o arduino", e)
         self.face_model = FaceDetectorModel()
         self.curr_idx = 0
 
@@ -183,8 +198,10 @@ class Model:
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         (x,y,w,h) = face
         id, pred = self.face_model.predict(frame[y:y+h,x:x+w])
-     
-        name = self.db.user_list[str(id)]
+        try:
+            name = self.db.user_list[str(id)]
+        except KeyError:
+            name = ""
         return id, name, pred
         
     def add_access(self, id, enabled):

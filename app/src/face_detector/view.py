@@ -89,27 +89,13 @@ class App(customtkinter.CTk):
                         id, name, pred = self.controller.handle_face_prediction(frame, (x,y,w,h))
                         color = (0,255,0)
                         text = f"Usuario:{name}"
-
-                        if pred > 40 and self.access_timeout_done:
+                        print("pred:",pred)
+                        if pred > 30:
                             color = (0,0,255)
                             text = "Desconhecido"
-                            self.controller.handle_access(id, False)
-                            self.access_timeout_done = False
-                            def set_timeout_done():
-                                self.access_timeout_done = True
-                            self.after(5000, set_timeout_done)
-
-                        elif self.access_timeout_done:
-                            self.controller.handle_access(id, True)
-                            self.access_timeout_done = False
-                            def set_timeout_done():
-                                self.access_timeout_done = True
-                            self.after(5000, set_timeout_done)
-
-
-
-
-
+                            self.controller.handle_locker_access(False)
+                        else:
+                            self.controller.handle_locker_access(True)
 
                         frame = cv2.rectangle(frame, (x,y), (x+w,y+h), color)
                         tag = cv2.rectangle(frame, (x,y+h), (x+w,y+h+20), color, -1)
@@ -127,7 +113,7 @@ class App(customtkinter.CTk):
                 self.img = customtkinter.CTkImage(light_image=frame, 
                                                   size=(self.label.winfo_width(), self.label.winfo_height()))
                 self.label.configure(image=self.img)
-
+            
             self.after(30, self._update_frame) 
         else:
             print("Não foi possível abrir a câmera, tentando reconexão")
